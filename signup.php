@@ -1,6 +1,6 @@
 <?php
 //add our database connection script
-include_once 'resource/connection.php';
+include_once 'resource/Database.php';
 include_once 'resource/utilities.php';
 
 //process the form
@@ -15,7 +15,7 @@ if(isset($_POST['signupBtn'])){
     $form_errors = array_merge($form_errors, check_empty_fields($required_fields));
 
     //Fields that requires checking for minimum length
-    $fields_to_check_length = array('username' => 4, 'password' => 4);
+    $fields_to_check_length = array('username' => 4, 'password' => 6);
 
     //call the function to check minimum required length and merge the return data into form_error array
     $form_errors = array_merge($form_errors, check_min_length($fields_to_check_length));
@@ -23,12 +23,20 @@ if(isset($_POST['signupBtn'])){
     //email validation / merge the return data into form_error array
     $form_errors = array_merge($form_errors, check_email($_POST));
 
+    //collect form data and store in variables
+    $email = $_POST['email'];
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+
+    if (checkDuplicateEntries("users", "email", $email, $db)) {
+        $result = flashMessage("Email already taken, Please try another one");
+    }
+    else if (checkDuplicateEntries("users", "username", $username, $db)) {
+        $result = flashMessage("Username already taken, Please try another one");
+    }
+
     //check if error array is empty, if yes process form data and insert record
-    if(empty($form_errors)){
-        //collect form data and store in variables
-        $email = $_POST['email'];
-        $username = $_POST['username'];
-        $password = $_POST['password'];
+    elseif(empty($form_errors)){
 
         //hashing the password
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
@@ -39,51 +47,76 @@ if(isset($_POST['signupBtn'])){
               VALUES (:username, :email, :password, now())";
 
             //use PDO prepared to sanitize data
-            $statement = $conn->prepare($sqlInsert);
+            $statement = $db->prepare($sqlInsert);
 
             //add the data into the database
             $statement->execute(array(':username' => $username, ':email' => $email, ':password' => $hashed_password));
 
             //check if one new row was created
             if($statement->rowCount() == 1){
-                $result = "<p style='padding:20px; border: 1px solid gray; color: green;'> Registration Successful</p>";
+                $result = flashMessage("Registration Successful", "Pass");
             }
         }catch (PDOException $ex){
-            $result = "<p style='padding:20px; border: 1px solid gray; color: red;'> An error occurred: ".$ex->getMessage()."</p>";
+            $result = flashMessage("An error occurred: ", $ex->getMessage());
         }
     }
     else{
         if(count($form_errors) == 1){
-            $result = "<p style='color: red;'> There was 1 error in the form<br>";
+            $result = flashMessage("There was 1 error in the form<br>");
         }else{
-            $result = "<p style='color: red;'> There were " .count($form_errors). " errors in the form <br>";
+            $result = flashMessage("There were " .count($form_errors). " errors in the form <br>");
         }
     }
 
 }
 
 ?>
-<!DOCTYPE html>
-<html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <title>Register Page</title>
-</head>
-<body>
-<h2>User Authentication System </h2><hr>
+<?php
+$page_title = "User Authentication System - Registration";
+include_once "partials/headers.php";
+?>
 
-<h3>Registration Form</h3>
 
-<?php if(isset($result)) echo $result; ?>
-<?php if(!empty($form_errors)) echo show_errors($form_errors); ?>
-<form method="post" action="">
-    <table>
-        <tr><td>Email:</td> <td><input type="text" value="" name="email"></td></tr>
-        <tr><td>Username:</td> <td><input type="text" value="" name="username"></td></tr>
-        <tr><td>Password:</td> <td><input type="password" value="" name="password"></td></tr>
-        <tr><td></td><td><input style="float: right;" type="submit" name="signupBtn" value="Signup"></td></tr>
-    </table>
-</form>
-<p><a href="index.php">Back</a> </p>
+<div class="container mt-5">
+    <section class="col col-lg-8 offset-2 pt-5">
+        <h2>Registration Form</h2><hr>
+        <?php if(isset($result)) echo $result; ?>
+        <?php if(!empty($form_errors)) echo show_errors($form_errors); ?>
+
+        <form  method="post" action="">
+            <div class="form-group">
+                <label for="emailField">Email address</label>
+                <input type="email" name="email" class="form-control" id="emailField" aria-describedby="emailHelp">
+                <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+            </div>
+            <div class="form-group">
+                <label for="usernameField">User name</label>
+                <input type="text" name="username" class="form-control" id="usernameField" aria-describedby="emailHelp">
+                <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+            </div>
+            <div class="form-group">
+                <label for="passwordField">Password</label>
+                <input type="password" name="password" class="form-control" id="passwordField">
+            </div>
+            <button type="submit" name="signupBtn" class="btn btn-primary float-right">Signup</button>
+        </form>
+    </section>
+</div>
+
+
+<?php
+include_once "partials/footers.php";
+?>
+
+
+
+
+
+
+
+
+
+
+
 </body>
 </html>

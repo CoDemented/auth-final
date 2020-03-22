@@ -1,6 +1,6 @@
 <?php
 //add our database connection script
-include_once 'resource/connection.php';
+include_once 'resource/Database.php';
 include_once 'resource/utilities.php';
 
 //process the form if the reset password button is clicked
@@ -79,27 +79,39 @@ if(isset($_POST['passwordResetBtn'])){
 }
 ?>
 
-<!DOCTYPE html>
-<html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <title>Password Reset Page</title>
-</head>
-<body>
-<h2>User Authentication System </h2><hr>
+<?php
+$page_title = "Password Reset Page";
+include_once "partials/headers.php";
+?>
 
-<h3>Password Reset Form</h3>
+<div class="container mt-5">
+    <section class="col col-lg-8 offset-2 pt-5">
+        <h2>Password Reset Form</h2><hr>
+        <?php if(isset($result)) echo $result; ?>
+        <?php if(!empty($form_errors)) echo show_errors($form_errors); ?>
 
-<?php if(isset($result)) echo $result; ?>
-<?php if(!empty($form_errors)) echo show_errors($form_errors); ?>
-<form method="post" action="">
-    <table>
-        <tr><td>Email:</td> <td><input type="text" value="" name="email"></td></tr>
-        <tr><td>New Password:</td> <td><input type="password" value="" name="new_password"></td></tr>
-        <tr><td>Confirm Password:</td> <td><input type="password" value="" name="confirm_password"></td></tr>
-        <tr><td></td><td><input style="float: right;" type="submit" name="passwordResetBtn" value="Reset Password"></td></tr>
-    </table>
-</form>
-<p><a href="index.php">Back</a> </p>
+        <form  method="post" action="">
+            <div class="form-group">
+                <label for="emailField">Email address</label>
+                <input type="email" name="email" class="form-control" id="emailField" aria-describedby="emailHelp">
+                <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+            </div>
+            <div class="form-group">
+                <label for="passwordField">New Password</label>
+                <input type="password" name="new_password" class="form-control" id="passwordField">
+            </div>
+            <div class="form-group">
+                <label for="passwordField2">Confirm Password</label>
+                <input type="password" name="confirm_password" class="form-control" id="passwordField2">
+            </div>
+            <button type="submit" name="passwordResetBtn" class="btn btn-primary float-right">Reset Password</button>
+        </form>
+    </section>
+</div>
+
+
+<?php
+include_once "partials/footers.php";
+?>
 </body>
 </html>

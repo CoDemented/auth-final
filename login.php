@@ -1,6 +1,6 @@
 <?php
 include_once 'resource/session.php';
-include_once 'resource/connection.php';
+include_once 'resource/Database.php';
 include_once 'resource/utilities.php';
 
 if(isset($_POST['loginBtn'])){
@@ -19,7 +19,7 @@ if(isset($_POST['loginBtn'])){
 
         //check if user exist in the database
         $sqlQuery = "SELECT * FROM users WHERE username = :username";
-        $statement = $conn->prepare($sqlQuery);
+        $statement = $db->prepare($sqlQuery);
         $statement->execute(array(':username' => $user));
 
        while($row = $statement->fetch()){
@@ -30,42 +30,57 @@ if(isset($_POST['loginBtn'])){
            if(password_verify($password, $hashed_password)){
                $_SESSION['id'] = $id;
                $_SESSION['username'] = $username;
-               header("location: index.php");
+               redirectTo('index');
            }else{
-               $result = "<p style='padding: 20px; color: red; border: 1px solid gray;'> Invalid username or password</p>";
+               $result = flashMessage("Invalid username or password");
            }
        }
 
     }else{
         if(count($form_errors) == 1){
-            $result = "<p style='color: red;'>There was one error in the form </p>";
+            $result = flashMessage("There was one error in the form ");
         }else{
-            $result = "<p style='color: red;'>There were " .count($form_errors). " error in the form </p>";
+            $result = flashMessage("There were " .count($form_errors). " error in the form ");
         }
     }
 }
 ?>
 
-<!DOCTYPE html>
-<html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <title>Login Page</title>
-</head>
-<body>
-<h2>User Authentication System </h2><hr>
+<?php
+$page_title = "User Authentication System - Login Page";
+include_once "partials/headers.php";
+?>
 
-<h3>Login Form</h3>
 
-<?php if(isset($result)) echo $result; ?>
-<?php if(!empty($form_errors)) echo show_errors($form_errors); ?>
-<form method="post" action="">
-    <table>
-        <tr><td>Username:</td> <td><input type="text" value="" name="username"></td></tr>
-        <tr><td>Password:</td> <td><input type="password" value="" name="password"></td></tr>
-        <tr><td><a href="forgot_password.php">Forgot Password?</a></td><td><input style="float: right;" type="submit" name="loginBtn" value="Signin"></td></tr>
-    </table>
-</form>
-<p><a href="index.php">Back</a> </p>
+<div class="container mt-5">
+    <section class="col col-lg-8 offset-2 pt-5">
+        <h2>Login Form</h2><hr>
+        <?php if(isset($result)) echo $result; ?>
+        <?php if(!empty($form_errors)) echo show_errors($form_errors); ?>
+
+        <form  method="post" action="">
+            <div class="form-group">
+                <label for="usernameField">Username</label>
+                <input type="text" name="username" class="form-control" id="usernameField" aria-describedby="emailHelp">
+                <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+            </div>
+            <div class="form-group">
+                <label for="passwordField">Password</label>
+                <input type="password" name="password" class="form-control" id="passwordField">
+            </div>
+            <div class="form-group form-check">
+                <input name="remember" type="checkbox" class="form-check-input" id="checkBox">
+                <label class="form-check-label" for="checkBox">Remember Me</label>
+            </div>
+            <a href="forgot_password.php">Forgot Password?</a>
+            <button type="submit" name="loginBtn" class="btn btn-primary float-right">Sign in</button>
+        </form>
+    </section>
+</div>
+
+
+<?php
+include_once "partials/footers.php";
+?>
 </body>
 </html>
