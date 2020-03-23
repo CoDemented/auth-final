@@ -113,79 +113,18 @@ function checkDuplicateEntries($table, $column_name, $value, $db)
     }
 }
 
-// Remember Me
-//------ @param User ID
-function rememberMe($user_id){
-    $encryptCookieData = base64_encode("UaQteh5i4y3ntstemYODEC{$user_id}");
-// Cookie set to expire in about 30 days
-    setcookie("rememberUserCookie", $encryptCookieData, time()+60*60*24*100, "/");
-}
-
-//Checked if the cookie used same with the ecvrypted cookie
-function isCookieValid($db){
-    $isValid = false;
-
-    if (isset($_COOKIE['rememberUserCookie'])){
-// Decode cookies and extract user ID
-        $decryptCookieData = base64_decode($_COOKIE['rememberUserCookie']);
-        $user_id = explode("UaQteh5i4y3ntstemYODEC", $decryptCookieData);
-        $userID = $user_id[1];
-
-//  Check if id retrieved from the cookie exist in the database
-        $sqlQuery = "SELECT * FROM users WHERE id = :id";
-        $statement = $db->prepare(@$sqlQuery);
-        $statement->execute(array(':id' => $userID));
-
-        if ($row = $statement->fetch()){
-            $id = $row['id'];
-            $username = $row['username'];
-
-            // Create the user session variable
-            $_SESSION['id'] = $id;
-            $_SESSION['username'] = $username;
-            $isValid =  true;
-        } else {
-            //cookie ID is invalid destroy session and logout user
-            $isValid = false;
-            $this->signout();
-        }
-    }
-    return $isValid;
-}
-function signout(){
-    unset($_SESSION['username']);
-    unset($_SESSION['id']);
-
-    if (isset($_COOKIE['rememberUserCookie'])){
-        unset($_COOKIE['rememberUserCookie']);
-        setcookie('rememberUserCookie', null, -1, '/');
-    }
-    session_destroy();
-    session_regenerate_id(true);
-    redirectTo('index');
-}
-
-
-function guard() {
-    $isValid = true;
-    $inactive = 60 * 2; //2 mins
-    $fingerprint = md5($_SERVER['REMOTE_ADDR'] . $_SERVER['HTTP_USER_AGENT']);
-
-    if ((isset($_SESSION['fingerprint']) && $_SESSION['fingerprint'] != $fingerprint)) {
-        $isValid = false;
-        signout();
-    } else if((isset($_SESSION['last_active']) && (time() - $_SESSION['last_active']) > $inactive) && $_SESSION['username']){
-      $isValid = false;
-      signout();
-    } else {
-        $_SESSION['last_active'] = time();
-    }
-    return $isValid;
-}
-
-
-
-
-
-
-
+//function checkDuplicateUsername($value, $db)
+//{
+//    try {
+//        $sqlQuery = "SELECT username FROM users WHERE username=:username";
+//        $statement = $db->prepare($sqlQuery);
+//        $statement->execute(array(':username' =>$value));
+//
+//        if ($row = $statement->fetch()) {
+//            return true;
+//        }
+//        return false;
+//    } catch (PDOException $ex) {
+//        //handle exeption
+//    }
+//}
